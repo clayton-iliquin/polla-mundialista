@@ -36,25 +36,33 @@ export async function render(el, ctx) {
   const byPhase = (key) =>
     matches.filter((m) => (m.phase || '').toLowerCase() === key);
 
-  // Construir columnas: reales si existen, si no placeholders desde la ronda previa.
+  // Construir columnas hasta la Final. Cada ronda usa partidos reales si
+  // existen; si no, se generan cruces "por definir" a partir de la ronda
+  // anterior (pares adyacentes) — aunque esa ronda también sea placeholder,
+  // para que el bracket siempre se dibuje completo.
+  // Entrada = partido real (con .id) o placeholder {sides: [ladoA, ladoB]}.
   const columns = [];
   let prev = null;
   for (const r of ROUNDS) {
     const real = byPhase(r.key);
-    let cards;
+    let entries;
     if (real.length) {
-      cards = real.map(realCard);
-    } else if (prev && prev.length) {
-      // Pares adyacentes de la ronda anterior alimentan cada cruce.
-      cards = [];
+      entries = real;
+    } else if (prev && prev.length > 1) {
+      entries = [];
       for (let i = 0; i < prev.length; i += 2) {
-        cards.push(placeholderCard(prev[i], prev[i + 1]));
+        entries.push({ sides: [sideFrom(prev[i]), sideFrom(prev[i + 1])] });
       }
     } else {
-      cards = [];
+      entries = [];
     }
-    if (cards.length) columns.push({ label: r.label, cards });
-    prev = real.length ? real : null;
+    if (entries.length) {
+      columns.push({
+        label: r.label,
+        cards: entries.map((e) => (e.sides ? placeholderCard(e.sides) : realCard(e))),
+      });
+    }
+    prev = entries;
   }
 
   const extras = matches.filter((m) =>
@@ -116,28 +124,39 @@ function realCard(m) {
     </article>`;
 }
 
-function placeholderCard(m1, m2) {
-  const name = (m) => {
-    if (!m) return 'Por definir';
-    const w = winnerOf(m);
-    return w || `Ganador ${shortName(m.home_team)}/${shortName(m.away_team)}`;
+// Lado de un cruce futuro a partir de una entrada de la ronda anterior:
+// ganador conocido → nombre y bandera; partido real sin resultado →
+// "Ganador A/B"; placeholder → "Por definir".
+function sideFrom(entry) {
+  if (!entry) return { name: 'Por definir', flag: '⏳', known: false };
+  if (entry.sides) return { name: 'Por definir', flag: '⏳', known: false };
+  const w = winnerOf(entry);
+  if (w) {
+    return {
+      name: w,
+      flag: w === entry.home_team ? entry.home_flag : entry.away_flag,
+      known: true,
+    };
+  }
+  return {
+    name: `Ganador ${shortName(entry.home_team)}/${shortName(entry.away_team)}`,
+    flag: '⏳',
+    known: false,
   };
-  const flag = (m) => {
-    const w = m && winnerOf(m);
-    if (!w) return '⏳';
-    return w === m.home_team ? m.home_flag : m.away_flag;
-  };
-  const row = (m) => `
-    <div class="brk-row ${winnerOf(m) ? '' : 'is-tbd'}">
-      ${flagHtml(flag(m), 'flag flag--sm')}
-      <span class="brk-team">${esc(name(m))}</span>
+}
+
+function placeholderCard(sides) {
+  const row = (s) => `
+    <div class="brk-row ${s.known ? '' : 'is-tbd'}">
+      ${flagHtml(s.flag, 'flag flag--sm')}
+      <span class="brk-team">${esc(s.name)}</span>
       <span class="brk-score"></span>
     </div>`;
   return `
     <article class="brk-card brk-card--tbd">
       <div class="brk-card__date">Por definir</div>
-      ${row(m1)}
-      ${row(m2)}
+      ${row(sides[0])}
+      ${row(sides[1])}
     </article>`;
 }
 

@@ -212,10 +212,17 @@ async function boot(session) {
   route();
 }
 
+// OJO: no hacer await de queries dentro del callback de onAuthStateChange —
+// supabase-js mantiene un lock de auth durante el callback y cualquier query
+// que necesite el token se queda esperando ese mismo lock (deadlock).
+// Por eso boot() se difiere con setTimeout(0) para correr fuera del lock.
 let started = false;
-supabase.auth.onAuthStateChange(async (_event, session) => {
-  await boot(session);
+let lastUserId;
+supabase.auth.onAuthStateChange((event, session) => {
   started = true;
+  if (event === 'TOKEN_REFRESHED' && session?.user?.id === lastUserId) return;
+  lastUserId = session?.user?.id || null;
+  setTimeout(() => boot(session), 0);
 });
 
 // Fallback por si onAuthStateChange no dispara al inicio.

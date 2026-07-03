@@ -168,6 +168,13 @@ a { color: var(--green); text-decoration: none; }
 .standings tr.is-me { background: rgba(34, 197, 94, 0.1); }
 .you { color: var(--green); font-size: 0.75rem; }
 .pname { max-width: 40vw; overflow: hidden; text-overflow: ellipsis; }
+.chev { color: var(--muted); font-size: 0.75rem; }
+.standings__detail.hidden { display: none; }
+.standings__detail > td { background: rgba(0, 0, 0, 0.18); padding: 0.4rem; }
+.detail-box { overflow-x: auto; }
+.standings--detail { box-shadow: none; background: transparent; }
+.standings--detail th, .standings--detail td { font-size: 0.82rem; padding: 0.4rem; }
+.standings--detail td .flag-img { vertical-align: middle; }
 
 /* Bracket */
 .phase { margin-bottom: 1.4rem; }

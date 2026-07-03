@@ -1,4 +1,5 @@
 // Vista de predicciones del pool activo.
+import { flagHtml } from '../flags.js';
 export async function render(el, ctx) {
   const { supabase, user, pool } = ctx;
 
@@ -93,7 +94,7 @@ function matchCard(m, pred, deadlinePassed, now) {
       <div class="match__phase">${esc(m.phase || '')} · ${kickoffStr} ${started ? '· 🔒 iniciado' : ''}</div>
       <div class="match__row">
         <div class="team team--home">
-          <span class="flag">${m.home_flag || '🏳️'}</span>
+          ${flagHtml(m.home_flag)}
           <span class="team__name">${esc(m.home_team)}</span>
         </div>
         <div class="score">
@@ -102,7 +103,7 @@ function matchCard(m, pred, deadlinePassed, now) {
           <input type="number" min="0" max="99" class="score__in in-away" value="${pa}" ${locked ? 'disabled' : ''} inputmode="numeric" />
         </div>
         <div class="team team--away">
-          <span class="flag">${m.away_flag || '🏳️'}</span>
+          ${flagHtml(m.away_flag)}
           <span class="team__name">${esc(m.away_team)}</span>
         </div>
       </div>

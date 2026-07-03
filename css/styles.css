@@ -202,6 +202,9 @@ a { color: var(--green); text-decoration: none; }
 .brk-card--tbd { opacity: 0.75; border-style: dashed; }
 .brk-row.is-tbd .brk-team { color: var(--muted); font-weight: 500; font-size: 0.82rem; }
 .flag--sm { font-size: 1.25rem; }
+/* Banderas como imagen (flagcdn) — el emoji no se ve en Windows */
+img.flag-img { width: 2.2rem; height: auto; border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.4); display: inline-block; vertical-align: middle; }
+img.flag-img.flag--sm { width: 1.5rem; }
 .brk-grid .brk-card { padding: 0.55rem 0.7rem; margin: 0; }
 .brk-grid .brk-team { font-size: 0.88rem; }
 .brk-grid .brk-score { font-size: 1rem; }

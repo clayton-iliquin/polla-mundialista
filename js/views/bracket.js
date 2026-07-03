@@ -1,5 +1,6 @@
 // Llave del mundial: bracket horizontal por rondas (estilo Google).
 // Las rondas sin partidos en el catálogo se generan como placeholders
+import { flagHtml } from '../flags.js';
 // a partir de los ganadores de la ronda anterior (pares adyacentes por kickoff).
 const ROUNDS = [
   { key: 'octavos', label: 'Octavos', size: 8 },
@@ -102,7 +103,7 @@ function realCard(m) {
   });
   const row = (team, flag, score, isWin) => `
     <div class="brk-row ${isWin ? 'is-winner' : ''}">
-      <span class="flag flag--sm">${flag || '🏳️'}</span>
+      ${flagHtml(flag, 'flag flag--sm')}
       <span class="brk-team">${esc(team)}</span>
       <span class="brk-score">${has ? score : ''}</span>
     </div>`;
@@ -128,7 +129,7 @@ function placeholderCard(m1, m2) {
   };
   const row = (m) => `
     <div class="brk-row ${winnerOf(m) ? '' : 'is-tbd'}">
-      <span class="flag flag--sm">${flag(m) || '🏳️'}</span>
+      ${flagHtml(flag(m), 'flag flag--sm')}
       <span class="brk-team">${esc(name(m))}</span>
       <span class="brk-score"></span>
     </div>`;

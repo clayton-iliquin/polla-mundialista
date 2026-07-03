@@ -246,8 +246,29 @@ export async function render(el, ctx) {
             .eq('id', m.id);
           if (error) throw error;
         } else {
-          const { error } = await supabase.from('matches').insert(payload);
+          const { data: created, error } = await supabase
+            .from('matches')
+            .insert(payload)
+            .select('id')
+            .single();
           if (error) throw error;
+          // Asignar automáticamente a la polla default para que aparezca
+          // en Predicciones (matches es solo el catálogo global).
+          const { data: defPool, error: poolErr } = await supabase
+            .from('pools')
+            .select('id, name')
+            .eq('is_default', true)
+            .maybeSingle();
+          if (poolErr) throw poolErr;
+          if (defPool) {
+            const { error: pmErr } = await supabase
+              .from('pool_matches')
+              .insert({ pool_id: defPool.id, match_id: created.id });
+            if (pmErr) throw pmErr;
+            showMsg(`Partido guardado y asignado a la polla "${defPool.name}".`, 'ok');
+            renderPartidos();
+            return;
+          }
         }
         showMsg('Partido guardado.', 'ok');
         renderPartidos();

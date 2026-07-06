@@ -167,7 +167,17 @@ a { color: var(--green); text-decoration: none; }
 .standings .paid { text-align: center; color: var(--green); }
 .standings tr.is-me { background: rgba(34, 197, 94, 0.1); }
 .you { color: var(--green); font-size: 0.75rem; }
-.pname { max-width: 40vw; overflow: hidden; text-overflow: ellipsis; }
+.pname { max-width: 40vw; display: flex; align-items: center; gap: 0.5rem; }
+.pname__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.avatar {
+  flex: none; position: relative;
+  width: 1.7rem; height: 1.7rem; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--line); color: var(--muted);
+  font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+  overflow: hidden; user-select: none;
+}
+.avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .chev { color: var(--muted); font-size: 0.75rem; }
 .standings__detail.hidden { display: none; }
 .standings__detail > td { background: rgba(0, 0, 0, 0.18); padding: 0.4rem; }

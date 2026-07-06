@@ -61,6 +61,12 @@ async function load(bodyEl, ctx) {
       .eq('pool_id', pool.id);
     const paid = new Map((members || []).map((m) => [m.user_id, m.has_paid]));
 
+    // Fotos de perfil (de Google OAuth). Query aparte y no-fatal: si la columna
+    // aún no existe en la BD, la tabla igual carga con iniciales de fallback.
+    const ids = rows.map((r) => r.user_id);
+    const { data: profs } = await supabase.from('profiles').select('id, avatar_url').in('id', ids);
+    const avatar = new Map((profs || []).map((p) => [p.id, p.avatar_url]));
+
     if (!rows || !rows.length) {
       bodyEl.innerHTML = `<div class="empty">Aún no hay posiciones. Se calculan cuando haya predicciones y resultados.</div>`;
       return;
@@ -77,7 +83,7 @@ async function load(bodyEl, ctx) {
               (r, i) => `
             <tr class="standings__row ${r.user_id === user.id ? 'is-me' : ''}" data-user="${r.user_id}" title="Ver detalle">
               <td class="pos">${medal(i)}</td>
-              <td class="pname">${esc(r.display_name)}${r.user_id === user.id ? ' <span class="you">(tú)</span>' : ''} <span class="chev">▸</span></td>
+              <td class="pname">${avatarHtml(avatar.get(r.user_id), r.display_name)}<span class="pname__name">${esc(r.display_name)}${r.user_id === user.id ? ' <span class="you">(tú)</span>' : ''}</span> <span class="chev">▸</span></td>
               <td class="num strong">${r.points ?? 0}</td>
               <td class="num">${r.exact_hits ?? 0}</td>
               <td class="paid">${paid.get(r.user_id) ? '✓' : '—'}</td>
@@ -223,6 +229,22 @@ function winnerName(h, a, explicit, m) {
 
 function medal(i) {
   return i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1;
+}
+
+// Foto de perfil: las iniciales son el fallback (van como contenido del span) y
+// la <img> las cubre por encima. Si la imagen falla al cargar se elimina y
+// quedan las iniciales. referrerpolicy=no-referrer evita bloqueos de Google.
+function avatarHtml(url, name) {
+  const img = url
+    ? `<img src="${esc(url)}" alt="" referrerpolicy="no-referrer" loading="lazy" onerror="this.remove()">`
+    : '';
+  return `<span class="avatar" aria-hidden="true">${esc(initials(name))}${img}</span>`;
+}
+
+function initials(name) {
+  const parts = String(name ?? '').trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '?';
+  return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
 }
 
 function esc(s) {

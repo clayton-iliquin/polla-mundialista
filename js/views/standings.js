@@ -194,25 +194,31 @@ async function detailHtml(ctx, userId) {
     </table>`;
 }
 
-// Puntos (cliente): 3 exacto+ganador, 1 solo ganador. Misma regla que predictions.js.
+// Puntos (cliente): 3 exacto+ganador, 1 solo ganador.
+// DEBE reflejar exactamente la vista SQL `standings`: el ganador se compara
+// por NOMBRE de equipo (winner_team/pred_winner si existen, si no se deriva del
+// marcador, 'DRAW' si empate sin ganador definido). Comparar por HOME/AWAY
+// rompía las predicciones de empate con equipo que pasa (p.ej. "1-1 pasa X").
 function pointsFor(pred, m) {
   if (m.result_home == null || m.result_away == null) return null;
   if (pred.pred_home == null || pred.pred_away == null) return 0;
 
   const exact = Number(pred.pred_home) === m.result_home && Number(pred.pred_away) === m.result_away;
 
-  const predWinner = winnerOf(Number(pred.pred_home), Number(pred.pred_away), pred.pred_winner);
-  const realWinner = winnerOf(m.result_home, m.result_away, m.winner_team);
+  const realWinner = winnerName(m.result_home, m.result_away, m.winner_team, m);
+  const predWinner = winnerName(Number(pred.pred_home), Number(pred.pred_away), pred.pred_winner, m);
 
-  if (exact && predWinner === realWinner) return 3;
-  if (predWinner && realWinner && predWinner === realWinner) return 1;
+  if (exact && realWinner === predWinner) return 3;
+  if (realWinner === predWinner) return 1;
   return 0;
 }
 
-function winnerOf(h, a, tiebreak) {
-  if (h > a) return 'HOME';
-  if (a > h) return 'AWAY';
-  return tiebreak ? 'TIE:' + tiebreak : null;
+// Ganador por nombre de equipo (misma lógica que la vista SQL standings).
+function winnerName(h, a, explicit, m) {
+  if (explicit) return explicit;
+  if (h > a) return m.home_team;
+  if (a > h) return m.away_team;
+  return 'DRAW';
 }
 
 function medal(i) {
